@@ -10,8 +10,35 @@
 </head>
 <body>
   <header class="role-header">Picker</header>
-  <main class="role-shell">
-    <div class="placeholder">[Tabs placeholder]</div>
+  <!-- status strip and last updated will be injected by JS -->
+  <main class="role-shell picker-shell">
+    <nav class="role-tabs picker-tabs">
+      <button class="tab-btn pill-tab active" data-tab="quickcalc">QuickCalc</button>
+      <button class="tab-btn pill-tab" data-tab="tracker">Tracker</button>
+      <span class="user-pill" id="user-pill">--</span>
+    </nav>
+    <div class="metrics-bar">
+      <div class="metric metric-live-rate">
+        <div class="metric-label">Live Rate</div>
+        <div class="metric-value" id="live-rate-display">—</div>
+      </div>
+      <div class="metric metric-total-units">
+        <div class="metric-label">Total Units</div>
+        <div class="metric-value" id="total-units-display">0</div>
+      </div>
+      <div class="metric metric-perf-score">
+        <div class="metric-label">Perf Score</div>
+        <div class="metric-value" id="perf-score-display">—</div>
+      </div>
+    </div>
+    <section class="assignment-panel" id="assignment-panel">
+      <!-- Assignment state will be rendered here by JS -->
+    </section>
+    <div class="picker-actions-row">
+      <button class="action-btn" id="log-delay-btn">Log / Delay</button>
+      <button class="action-btn" id="shared-pick-btn">Shared Pick</button>
+      <button class="action-btn primary" id="start-resume-btn">Start</button>
+    </div>
   </main>
 </body>
 </html>

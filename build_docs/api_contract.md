@@ -1,3 +1,24 @@
+
+## POST /assignments/next
+**Request:**
+```json
+{
+  "device_id": "string",
+  "company_id": "string",
+  "role": "string"
+}
+```
+**Response:**
+```json
+{
+  "assignment_id": "string",
+  "customer": "string",
+  "order_label": "string",
+  "zone": "string",
+  "route": "string",
+  "started_at": "ISO string"
+}
+```
 # WQTV2 Minimal API Contract (Scanner v2)
 
 This document defines the minimal, stable API contract for the scanner UI. It is intentionally thin to enforce a render-only client and prevent business logic drift.

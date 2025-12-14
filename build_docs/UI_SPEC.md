@@ -1,3 +1,41 @@
+# Picker Home v0 (Assignment-first)
+
+## Components
+- Pill tabs: QuickCalc, Tracker (UI toggle only)
+- User pill (shows state.user.display_name if present)
+- Metrics bar: Live Rate, Total Units, Perf Score (display only)
+- Assignment panel:
+  - If no active assignment: big Start next order button
+  - If active: show assignment details (customer/order, zone/route, id, started time), Resume button
+- Bottom actions: Log/Delay, Shared Pick, Resume/Start
+
+## Required read-model fields
+- metrics.live_rate_display (string)
+- metrics.total_units (number)
+- metrics.perf_score_display (string)
+- assignment.active (bool)
+- assignment.customer (string)
+- assignment.order_label (string)
+- assignment.zone (string, optional)
+- assignment.route (string, optional)
+- assignment.assignment_id (string)
+- assignment.started_at (ISO string)
+
+## Required endpoints added
+- POST /assignments/next
+## Role Page Shell v0
+
+### UI Placeholders
+- Header title (e.g. “Picker” / “Operative”)
+- Status strip: Connectivity (Online/Offline), Queue count (Queue: N)
+- Last updated timestamp (Last updated: ...)
+- Tab panels (internal, placeholder only)
+
+### Required Read-Model Fields
+- header (string)
+- queueCount (number)
+- lastUpdated (ISO string)
+- [Optional: live_rate, perf_score, etc. — display only if present]
 # WQT v2 Login Screen UI Spec
 
 ## Components
@@ -27,3 +65,39 @@
 - All styling is in shared CSS under `scanner/styles/`
 - No inline or page-specific styles
 - No business logic, metrics, or session derivations in UI
+
+## Visual Tokens Used (2025-12)
+
+- **Background gradient:** `linear-gradient(135deg, #7b2ff2 0%, #40e0d0 100%)`
+- **Pattern overlay:** SVG text 'WQT' at 4.5% opacity, centered, font-size 120
+- **Glass card:**
+  - Background: `rgba(255,255,255,0.13)`
+  - Border: `1.5px solid rgba(255,255,255,0.22)`
+  - Border-radius: `18px`
+  - Blur: `12px` (backdrop-filter)
+  - Shadow: `0 8px 32px 0 rgba(31,38,135,0.18)`
+- **Input:**
+  - Background: `rgba(255,255,255,0.18)`
+  - Border: `1.5px solid #bfc9d1`
+  - Focus border: `#2ecc40`
+  - Border-radius: `8px`
+- **Primary button:**
+  - Background: `#232b3b`
+  - Glow: `0 0 0 2px #2ecc40, 0 1px 8px #2ecc4033`
+  - Border-radius: `8px`
+  - Font-weight: 600
+- **Secondary button:**
+  - Background: `#2d3a5e`
+  - Hover: `#1e2233`
+  - Border-radius: `8px`
+- **Status pill:**
+  - Online: `#2ecc40` bg, `#fff` text, border `#2ecc40cc`
+  - Offline: `#e67e22` bg, `#fff` text, border `#e67e22cc`
+  - Border-radius: `999px`
+  - Shadow: `0 1px 4px rgba(44,204,64,0.08)`
+- **Footer:**
+  - Color: `#e0e0e0`, opacity 0.85
+- **Device ID:**
+  - Displayed as `Device xxxxxxxx` (last 8 chars of UUID)
+
+All tokens are defined as CSS variables in `scanner/styles/theme.css`.
