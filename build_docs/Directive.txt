@@ -1,0 +1,294 @@
+Perfect — your answers lock the remaining unknowns cleanly.
+Based on that, the next Trinity file must be the Directive, because:
+
+The Manifesto is now locked.
+
+The Blueprint is now locked (event-level granularity, overlay semantics, DB-per-company).
+
+What you need next is execution control so the rebuild doesn’t drift or collapse back into a v1-style mess.
+
+Below is the WQT v2 Directive.
+This is the file you give to GPT-5.2 / Codex / future-you when actually building.
+
+WQT v2 Directive
+
+Version: 2.0
+Authority: Must comply with WQT v2 Manifesto and Blueprint
+Scope: Build execution only — no product invention
+
+Role
+
+You are acting as a senior systems engineer executing a greenfield rebuild of WQT v2.
+You are not allowed to refactor the existing v1 codebase or “improve it incrementally”.
+You must build v2 as a separate, clean system that can later coexist with or replace v1.
+
+You must treat the scanner client, API, and management system as separate concerns.
+
+Objective
+
+Build WQT v2 as a scanner-first event capture system with:
+
+Event-level granularity (every scan, countback, unit confirmation).
+
+Offline-first event queue with idempotent sync.
+
+A strict API boundary.
+
+One primary session per device plus unlimited cloned overlay sessions for other roles.
+
+Company-isolated databases (one DB per company).
+
+A future-ready path to full WMS replacement.
+
+You must not allow business logic, metrics, or state truth to leak into the scanner UI.
+
+User request
+
+Implement WQT v2 according to the Manifesto and Blueprint, in a way that:
+
+Prevents architectural drift.
+
+Avoids repeating v1 failures (global state, DOM-driven logic, mixed concerns).
+
+Produces a scanner app that can run independently and reliably on warehouse devices.
+
+Enables a separate management system to be built on the same API without rewriting logic.
+
+Process
+Phase 0 — Hard freeze and separation
+
+Treat the existing WQT codebase as read-only reference only.
+
+Create a new repository or top-level v2 directory.
+
+Do not copy files wholesale from v1.
+
+Only port concepts that are explicitly defined in the Blueprint.
+
+Phase 1 — Define the API contract first (no UI yet)
+
+You must begin by defining the API as if no UI exists.
+
+Required outputs of this phase:
+
+Event ingestion contract (single + batch).
+
+Auth model supporting:
+
+primary session
+
+cloned overlay sessions (full role-based access, not restricted views).
+
+Read models for:
+
+active shift
+
+shift history
+
+order history
+
+metrics (with rule versions included).
+
+Policy endpoints (baseline configuration, thresholds).
+
+Company isolation model (one DB per company).
+
+Rules:
+
+API must be stateless.
+
+API must enforce all role permissions server-side.
+
+API must be deployable per company with its own DB connection.
+
+API must be compatible with Neon Data API as an implementation detail.
+
+Do not build metrics in the client. Ever.
+
+Phase 2 — Event model and ledger
+
+Implement the event system before any UI.
+
+Requirements:
+
+Every scanner interaction that represents work produces an event:
+
+scan location
+
+confirm countback
+
+unit increment
+
+pallet confirmation
+
+break start/end
+
+wrap start/end
+
+Every event includes:
+
+client_event_id (UUID)
+
+company_id
+
+primary_session_id
+
+optional overlay_session_id
+
+device_id
+
+client_timestamp
+
+server_timestamp
+
+API must be idempotent on client_event_id.
+
+Derived state (orders, shifts, metrics) must be computed from events.
+
+Phase 3 — Offline queue (scanner critical path)
+
+Before any UI polish:
+
+Implement a durable client-side event queue.
+
+Queue must survive:
+
+refresh
+
+crash
+
+power loss
+
+Queue states:
+
+queued
+
+syncing
+
+accepted
+
+rejected (with reason)
+
+Scanner UI must visibly indicate:
+
+LIVE
+
+OFFLINE (QUEUED)
+
+SYNCING
+
+BLOCKED
+
+Rules:
+
+No event is silently dropped.
+
+Rejected events must remain visible until resolved.
+
+Sync must use batch API.
+
+Phase 4 — Scanner client (thin, boring, fast)
+
+Only now do you build the scanner UI.
+
+Rules:
+
+HTML pages are views only.
+
+One shared app layer loaded by all pages.
+
+No cross-page communication.
+
+No global mutable domain state.
+
+No metric computation in JS.
+
+Scanner responsibilities:
+
+Capture events.
+
+Display immediate feedback.
+
+Display server-provided metrics.
+
+Handle offline gracefully.
+
+Maintain primary session continuity.
+
+Allow overlay login without affecting primary session.
+
+Overlay behavior:
+
+Overlay is a full login, not a modal hack.
+
+Overlay user sees their own role-correct UI.
+
+Overlay actions create events tied to overlay session.
+
+Overlay cannot mutate or close primary shift/order.
+
+Phase 5 — Management system (separate app)
+
+Supervisor/admin dashboards are not extensions of the scanner UI.
+
+Rules:
+
+Separate frontend.
+
+Same API.
+
+No reuse of scanner components except shared client libs.
+
+Management system:
+
+configures baselines
+
+reviews event logs
+
+audits shifts/orders
+
+manages warehouse locations
+
+sends device messages
+
+Phase 6 — Parallel run and migration
+
+v1 remains operational.
+
+v2 runs alongside.
+
+Metrics are compared, not assumed correct.
+
+Gradually shift operational trust to v2.
+
+Decommission v1 only after parity is proven.
+
+Output format
+
+Each phase must produce:
+
+A short architecture note explaining what was built and why.
+
+A checklist confirming no Blueprint violations occurred.
+
+A list of explicitly deferred features.
+
+No phase may proceed until the previous one is complete and validated.
+
+Stop conditions
+
+You must stop or refuse to continue if:
+
+Business logic is implemented in the scanner UI.
+
+Metrics are computed differently in different places.
+
+UI code talks directly to the database.
+
+Relative fetch paths are introduced.
+
+Global mutable state is reintroduced.
+
+Overlay session can be the same user as primary.
+
+Company isolation is bypassed “temporarily”.

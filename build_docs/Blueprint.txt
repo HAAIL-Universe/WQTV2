@@ -1,0 +1,513 @@
+WQT v2 Blueprint
+
+Version: 2.0 (Scanner-first client + Management system + API boundary)
+Inputs locked:
+
+Event truth: record every operational event (append-first ledger)
+
+Identity: one primary actionable login per device; optional secondary session (overlay) that cannot be the same user and does not affect the primary session
+
+Offline: offline queue + later sync is required (with clear UI state)
+
+Baselines: configurable by admin (policy-driven)
+
+Company boundary: hard boundary (tenant isolation as a first-class concept)
+
+This Blueprint defines what must exist, what must never exist, and where responsibilities live so the rebuild cannot drift.
+
+1) System shape
+
+WQT v2 is three components:
+
+Scanner Client (Edge App)
+
+Runs on Zebra/scanner browsers.
+
+Captures events quickly.
+
+Shows immediate feedback + lightweight live metrics.
+
+Maintains an offline queue.
+
+Never talks to the database.
+
+Core API (Warehouse Nervous System)
+
+Auth, roles, sessions, event ingestion, data validation.
+
+Derives shifts/orders summaries and serves read models.
+
+Owns all business rules + scoring versions.
+
+Only component that touches the database (or Neon Data API behind it).
+
+Management System (Supervisor/Admin Web)
+
+Dashboards, policy configuration, audit, location controls, exports.
+
+Consumes the same API.
+
+Never re-implements business logic locally.
+
+Hard rule: clients do not “speak to each other”. They share only the API.
+
+2) Domain model
+2.1 Tenant boundary (Company)
+
+Company is a hard boundary. Every record is scoped to exactly one company.
+
+The system must support: “Company A’s users cannot even be addressable inside Company B’s namespace.”
+
+Implementation options (choose one and stick):
+
+Preferred (Enterprise-clean): separate DB per company (or schema per company).
+
+Acceptable: single DB with company_id on every table + strict row-level enforcement in API (but treat this as an implementation compromise, not the ideal).
+
+Blueprint requirement: company_id is mandatory in every API auth context.
+
+2.2 Identity and roles
+
+User: belongs to exactly one company. Has role: picker | operative | supervisor | admin | gm (admin/gm are management-side, not scanner-side).
+
+Device: scanner device identity (not trusted as a user identity). A device can host sessions, but never becomes an identity.
+
+Primary session:
+
+Exactly one primary logged-in user per device at a time (the “active” scanner operator).
+
+Primary session owns the device’s main workflow.
+
+Secondary session (overlay session):
+
+A temporary, separate authenticated session that can be opened while primary remains active.
+
+Must not mutate primary session state.
+
+Must not be the same user as the primary.
+
+Use case: operative logs in briefly on a picker’s scanner to perform an RF countback / admin check.
+
+Overlay session should have narrowly scoped capabilities (explicit allowlist), and expiry.
+
+3) Event truth model (append-first)
+
+Everything meaningful is an Event.
+
+3.1 Event ledger
+
+The API maintains an append-only-ish ledger of events:
+
+Each event has: event_id (uuid), company_id, timestamp, actor_user_id, device_id, session_id, event_type, payload, client_event_id, client_timestamp, server_timestamp, version.
+
+Clients are allowed to send events offline later. Therefore:
+
+client_event_id must exist (uuid generated client-side).
+
+API must be idempotent: same (company_id, client_event_id) cannot create duplicates.
+
+3.2 Required event types (minimum)
+
+You can extend later, but v2 must at least support:
+
+Auth / session
+
+PRIMARY_SESSION_STARTED
+
+PRIMARY_SESSION_ENDED
+
+OVERLAY_SESSION_STARTED
+
+OVERLAY_SESSION_ENDED
+
+Shift lifecycle
+
+SHIFT_STARTED (with contracted start and scheduled length)
+
+SHIFT_ENDED
+
+Order lifecycle
+
+ORDER_STARTED (customer/order code)
+
+ORDER_UPDATED (units/locations/pallets incremental updates if needed)
+
+ORDER_CLOSED
+
+ORDER_CLOSED_EARLY (remaining units + reason)
+
+Time exclusions
+
+BREAK_STARTED, BREAK_ENDED
+
+WRAP_STARTED, WRAP_ENDED (if wrap is a separate tracked segment)
+
+Warehouse/location system (if retained in v2)
+
+LOCATION_SET_EMPTY
+
+LOCATION_SET_AVAILABLE
+
+BAY_COUNTBACK_RECORDED (RF countback result)
+
+AISLE_SUMMARY_CAPTURED (optional)
+
+Messaging / comms
+
+DEVICE_MESSAGE_RECEIVED
+
+DEVICE_MESSAGE_ACKED
+
+Blueprint requirement: event payloads are strictly validated per type.
+
+4) Derived models (server-owned)
+
+The API derives the “read models” used by clients and dashboards. No client computes canonical truth.
+
+4.1 Shift (derived from events)
+
+A Shift is derived from:
+
+SHIFT_STARTED → start metadata (contracted start, effective start, scheduled length hours)
+
+Break/wrap segments → excluded minutes
+
+Order events → totals and durations
+
+SHIFT_ENDED → closure time + final totals
+
+The API must store:
+
+start_time (actual)
+
+contracted_start_time (chosen)
+
+scheduled_length_hours
+
+effective_start_time policy result (if you keep the concept)
+
+excluded_minutes
+
+worked_minutes
+
+totals: units, locations, pallets, perf_points, etc.
+
+summary_json (optional, but must not be the sole storage of truth)
+
+Important corrective from audit: shift metadata columns must actually be written and consistent.
+
+4.2 Order (derived from events)
+
+An Order within a shift:
+
+start/close times
+
+units/locations/pallets
+
+excluded minutes within that order (break/wrap segments that overlap)
+
+closure type (normal vs early) + early reason + remaining units
+
+raw event log linkage
+
+Rule: compute units/hour and perf-points/hour consistently server-side using the same “active minutes” rule.
+
+4.3 Metrics (versioned rules)
+
+Metrics are calculated by a versioned ruleset, owned by API:
+
+Live Rate (units/hour)
+
+Performance points/hour where points = units + 2*locations
+
+Trend vs baseline (baseline policy admin-configurable)
+
+Zones/thresholds (if used): green/amber/red definitions are policy-driven and transparent.
+
+Blueprint requirement: every metric response includes:
+
+metric_name
+
+value
+
+units
+
+rule_version
+
+inputs_summary (enough to explain “why” without leaking private data)
+
+5) Baselines and admin configuration (policy engine)
+
+Baselines are configurable by admin; therefore:
+
+5.1 Policy objects
+
+BaselinePolicy (per company, optionally per work type / customer)
+
+baseline method: LAST_N_COMPARABLE | TIME_WINDOW | ALL_TIME | CUSTOM
+
+N, time window, filters
+
+comparable definition (same customer/order code? same workstream? same area?)
+
+ThresholdPolicy
+
+trend thresholds (e.g., ±3% bands)
+
+zone cutoffs for green/amber/red
+
+ScoringPolicy
+
+points formula parameters (currently units + 2*locations, but keep configurable safely)
+
+Policies must be editable in the management system and enforced by API.
+
+6) Offline queue (scanner hard requirement)
+6.1 Local queue contract
+
+Scanner maintains a durable queue:
+
+Stored in local persistence (localStorage is acceptable initially, but prefer IndexedDB if feasible; blueprint allows either, but requires durability across refresh/restart).
+
+Each queued item: {client_event_id, type, payload, client_timestamp, attempt_count, last_attempt_at, status}.
+
+6.2 Sync rules
+
+On connectivity, scanner syncs events FIFO (or by dependency order).
+
+API supports batch ingestion: POST /events/batch.
+
+API replies per event: accepted / duplicate / rejected + reason.
+
+Scanner UI must show one of:
+
+LIVE (connected, sending)
+
+QUEUED (offline, capturing locally)
+
+SYNCING (catching up)
+
+ERROR (queue blocked by validation/auth)
+
+6.3 Idempotency and reconciliation
+
+Duplicates must be safe.
+
+If an event is rejected, scanner must not silently drop it. It must:
+
+mark it as blocked
+
+show a minimal actionable message
+
+allow supervisor/admin resolution path (usually management system)
+
+7) UI/page architecture (thin clients)
+
+You said you’ll keep login.html, keep existing CSS sources, and keep role pages. That’s fine — but the rebuild must enforce these constraints:
+
+7.1 No business logic in views
+
+HTML pages render state and call actions.
+
+They do not calculate metrics.
+
+They do not interpret time exclusions.
+
+They do not contain “truth” beyond local UI state.
+
+7.2 Shared app layer
+
+Every page loads the same core modules (names are conceptual, not prescriptive):
+
+Auth client (token storage, session creation, overlay handling)
+
+API client (single base URL strategy, never relative fetch)
+
+State store (single source of truth client-side)
+
+Event queue (offline + sync)
+
+UI adapters (page-specific rendering bindings)
+
+Pages should only add:
+
+page_login.js
+
+page_picker.js
+
+page_supervisor.js
+
+page_admin.js
+
+Everything else is shared.
+
+Hard rule from audit: eliminate cross-file implicit global calls. No “function in file A calling function in file B by global name”. If a module needs something, it imports/loads via an explicit interface.
+
+8) Authentication model (supports overlay cleanly)
+8.1 Tokens
+
+Primary token: stored as “primary session”.
+
+Overlay token: stored separately, with strict expiry and scope.
+
+Overlay token must be rejected if it matches primary user id.
+
+8.2 Role gating
+
+Client-side route guards are for UX only.
+
+Server-side authorization is mandatory on every endpoint.
+
+Supervisor/admin endpoints cannot be called with picker tokens even if UI is bypassed.
+
+9) API surface (must exist)
+
+The exact routes can vary, but these capabilities must be provided:
+
+9.1 Auth
+
+POST /auth/login (company + username/PIN OR pin-only depending on company policy)
+
+POST /auth/logout
+
+POST /auth/overlay_login (must enforce “not same user” and scope)
+
+POST /auth/overlay_logout
+
+GET /auth/me (returns user + role + company context)
+
+9.2 Event ingestion
+
+POST /events (single)
+
+POST /events/batch (batch, idempotent)
+
+GET /events/status (optional, for diagnostics)
+
+9.3 Shift + order read models
+
+GET /me/active_shift
+
+GET /me/shift_history
+
+GET /me/order_history
+
+Supervisor views:
+
+GET /super/active_shifts
+
+GET /super/operator/{id}/history
+
+Admin views:
+
+GET /admin/users
+
+POST /admin/policies/baselines
+
+GET /admin/policies/baselines
+
+etc.
+
+9.4 Messaging
+
+POST /admin/message (send to device/user)
+
+GET /messages/check (scanner polls)
+
+POST /messages/ack
+
+9.5 Warehouse locations (if retained)
+
+GET /warehouse-map
+
+POST /warehouse-locations/bulk
+
+POST /warehouse-locations/toggle-empty
+
+GET /warehouse-locations/summary
+
+Important from audit: all API calls must go through one adapter with a base URL. No hardcoded relative paths anywhere.
+
+10) Data storage strategy (how we fix the “MainState blob” problem)
+
+The current system stores a per-user MainState JSON blob. In v2:
+
+You may keep a small “client preferences” document (theme, last tab, etc.).
+
+You may keep a “device snapshot” for crash recovery convenience.
+
+But you must not store the entire domain as one opaque blob.
+
+Authoritative storage becomes:
+
+event ledger tables
+
+derived shift/order tables
+
+warehouse/location tables
+
+policy tables
+
+minimal device/client snapshot tables (optional)
+
+This removes schema drift, unlocks portability, and makes management tools trustworthy.
+
+11) Neon Data API positioning
+
+Neon Data API can be used, but only behind the backend boundary.
+
+Two acceptable patterns:
+
+Pattern A (Recommended):
+Scanner + Management → FastAPI service → Postgres (Neon)
+
+Cleanest, most controllable auth + validation.
+
+Pattern B (Possible later):
+FastAPI service → Neon Data API → Postgres
+
+Use if you want a “DB provider abstraction”, but keep it internal.
+
+Not allowed: scanner calling Neon Data API directly.
+
+12) Migration stance (from the current app)
+
+This blueprint expects a deliberate migration plan:
+
+Freeze current v1 (legacy) and stop expanding it.
+
+Stand up v2 API with event ingestion + read models first.
+
+Build v2 scanner that can run in parallel.
+
+Gradually port:
+
+shift start/end
+
+order tracking
+
+history
+
+supervisor/admin
+
+warehouse locations
+
+At no point should you attempt to “modularize” the current v1 by splitting files while keeping the same global-state paradigm. That recreates the exact failure mode the audit identified.
+
+13) Non-goals and forbidden patterns (explicit)
+
+Forbidden in v2:
+
+Single monolithic “MainState” as truth.
+
+UI computing canonical metrics differently than server.
+
+Relative fetch paths assuming same-origin.
+
+Global cross-file function coupling.
+
+Device identity used as user identity.
+
+Role gating only in UI.
+
+Overlay login that can be same user or that mutates primary session.

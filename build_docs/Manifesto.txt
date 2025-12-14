@@ -1,0 +1,268 @@
+WQT v2 Manifesto
+
+Version: 2.0 (Scanner-first, WMS-ready)
+Status: Canonical intent document — overrides implementation convenience
+Purpose: Lock vision + non-negotiables so the rebuild cannot drift
+
+1) Identity
+
+WQT v2 is a scanner-native operational client plus a separate management system, connected only through a stable API boundary. The scanner is the “floor truth capture” surface. The management system is the “warehouse brain”. The database is never a shared coupling point between UIs.
+
+WQT v2 exists to make warehouse performance, flow, and operational reality measurable, explainable, and improvable without requiring a full WMS replacement on day one — but it must be architected so that full replacement becomes possible later.
+
+2) The Prime Directive
+
+The scanner app must remain simple, fast, and resilient forever.
+Any feature that risks slowing down scans, increasing taps, increasing cognitive load, or increasing breakage under poor connectivity belongs in the management system or API layer — not in the scanner UI.
+
+3) Target Environment Truths
+
+This system is built for real warehouse conditions:
+
+Operators wear gloves, hands are cold/wet, attention is split, and time matters.
+
+Network can drop. Devices can sleep. Users can fat-finger. Shifts are chaotic.
+
+The UI must work horizontally, with big hit targets, minimal scrolling, and zero “precision” interactions.
+
+The system must tolerate interruptions without corrupting sessions, miscounting work, or blocking the user.
+
+Users will “game” metrics if they’re opaque or unfair. Metrics must be defensible and explainable.
+
+4) Product Goals
+
+WQT v2 must deliver:
+
+Accurate floor-event capture (what happened, when, by whom, where, for which order/workstream).
+
+Actionable, explainable metrics (live + historical + trend vs baseline).
+
+Role-correct experiences (picker/operative/supervisor/admin) with strict gating.
+
+Enterprise portability (multi-company, configurable policies, pluggable database infra).
+
+Parallel-run capability (can coexist with Pyramid or any WMS, then progressively replace functions).
+
+5) Non-Negotiable Principles
+5.1 Separation of Concerns: Two Systems, One Domain
+
+Scanner app = capture + immediate feedback only.
+
+Management system = analytics, configuration, orchestration, and admin tooling.
+
+Both systems speak to the same API contract, not to each other.
+
+No UI directly queries the database.
+
+5.2 Single Source of Truth
+
+Truth is the server-side event ledger (via API).
+
+UI may cache locally, but cache is never authoritative.
+
+If there’s a conflict, the API’s recorded events win.
+
+5.3 Event-Driven Architecture
+
+Work is represented as events, not “magical UI state”.
+
+The scanner emits events; the system derives sessions, metrics, summaries, and trends.
+
+Metrics are derived from events using explicit, versioned rules.
+
+5.4 Stability over Cleverness
+
+Prefer boring systems that survive bad conditions over clever systems that fail silently.
+
+Any design that requires “remembering how it works” is rejected.
+
+5.5 Explainability
+
+If a picker asks “why is this red?”, the system must be able to explain it.
+
+Metrics must be transparent and consistent; “mystery scoring” is not allowed.
+
+5.6 No Cross-Page Coupling
+
+Pages do not “talk”. They observe shared state through a shared app layer.
+
+No page contains business logic that only it understands.
+
+No metric is calculated in a view.
+
+5.7 API Boundary as Product Surface
+
+The API is a first-class product artifact.
+
+API endpoints and payloads are stable, documented, and versioned.
+
+Companies should be able to swap database providers or move off Neon with minimal disruption.
+
+6) What “Professional” Means (for WQT)
+
+Professional does not mean “more features”. It means:
+
+Predictable behaviour under stress.
+
+Clean, modular boundaries so changes don’t cascade.
+
+Consistent rules that survive refactors.
+
+Observability: logs, auditability, and traceability.
+
+Data integrity before visual polish.
+
+7) User Types and What They Must Get
+Picker / Operative (Scanner-first)
+
+Must get:
+
+Fast login and role routing.
+
+A stable, minimal workflow to record work.
+
+Clear, immediate feedback: “recorded / queued / failed / retrying”.
+
+Live performance view that does not lie.
+
+A history view that is trustworthy and doesn’t corrupt.
+
+Must not get:
+
+Configuration screens.
+
+Complex admin settings.
+
+Heavy analytics dashboards.
+
+Multi-step forms for routine actions.
+
+Supervisor / Manager (Management System primary)
+
+Must get:
+
+Visibility across people, areas, orders.
+
+Drill-down into event history with audit trails.
+
+Tools to resolve anomalies (missing scans, corrections via policy).
+
+Configurable targets/baselines (policy-driven, not hardcoded).
+
+Evidence-based performance narratives.
+
+Admin (Management System only)
+
+Must get:
+
+User + role management
+
+Warehouse configuration (areas, work types)
+
+Policy configuration (thresholds, scoring rules, baselines)
+
+Data export and compliance controls
+
+8) Metrics Philosophy
+
+WQT’s core metric philosophy:
+
+Metrics are decision tools, not punishments.
+
+Metrics must resist obvious gaming.
+
+Metrics must adapt to context (different orders behave differently).
+
+Trend should be anchored to personal history per order/workstream, not arbitrary global targets, unless configured.
+
+Rules for metrics:
+
+Each metric has a definition, inputs, and a version.
+
+Metric calculation belongs server-side or in a shared domain module — never scattered across UI.
+
+Baselines must be explicitly defined (e.g., last N comparable sessions) and reproducible.
+
+9) Resilience Guarantees
+
+WQT v2 must be designed so these statements remain true:
+
+If the network drops, the scanner can continue capturing events locally and sync later without double-counting.
+
+If the UI refreshes, the system can recover current session context safely.
+
+If the backend changes, old scanner clients fail gracefully with a clear message, not silent corruption.
+
+If a user logs out/in or switches devices mid-shift, the system resolves identity and sessions predictably.
+
+10) Data Integrity and Auditability
+
+WQT v2 must support:
+
+Immutable-ish event records (append-first mindset).
+
+Corrections as explicit events (or clearly audited updates).
+
+Traceability from UI action → API request → stored event → derived metric.
+
+A clear separation between raw events and derived summaries.
+
+11) Security and Access
+
+Non-negotiables:
+
+Role-based access enforced server-side, not only in UI.
+
+No privileged endpoints callable by scanner roles.
+
+Auth must be resilient to scanner reconnections and session invalidation events.
+
+Any “admin bypass” patterns are forbidden.
+
+12) Portability and Multi-Company Readiness
+
+From day one, architecture must assume:
+
+Multiple companies, sites, warehouses, roles.
+
+Config varies by company (policy thresholds, baseline rules, work types).
+
+The database is replaceable; the API contract is stable.
+
+If Neon Data API is used:
+
+Treat it as an implementation detail behind the backend service boundary.
+
+The scanner never calls Neon directly.
+
+The management system never calls Neon directly.
+
+Only the backend owns the Neon integration.
+
+13) Non-Goals for v2 (to prevent scope creep)
+
+WQT v2 is not (yet):
+
+A full routing/slotting optimizer replacing WMS logic.
+
+A payroll/HR time-tracking system.
+
+A BI platform with infinite dashboards.
+
+A mobile consumer app experience.
+
+Those can evolve later, but not by polluting the scanner client.
+
+14) Drift Prevention Protocol
+
+If a proposed change violates any of these, it is rejected unless the Manifesto itself is formally revised:
+
+Adds business logic to scanner UI.
+
+Couples pages together.
+
+Introduces direct DB access from UI.
+
+Duplicates metric logic in multiple places.
+
+Optimizes for “quick hacks” over stability.
