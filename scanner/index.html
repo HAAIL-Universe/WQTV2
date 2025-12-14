@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign in to WQT</title>
+  <link rel="stylesheet" href="styles/theme.css">
+  <link rel="stylesheet" href="styles/login.css">
+  <script type="module" src="scripts/login.js"></script>
+</head>
+<body>
+  <div class="background-overlay"></div>
+  <main class="centered-card">
+    <div class="card-header">
+      <h1>Sign in to WQT</h1>
+      <span class="status-pill" id="status-pill">Online</span>
+    </div>
+    <form id="login-form" autocomplete="off">
+      <input type="text" id="code-input" maxlength="5" pattern="\d{5}" placeholder="5-digit code" required autofocus>
+      <div class="button-row">
+        <button type="submit" id="login-btn">Log in</button>
+        <button type="button" id="create-user-btn">Create user</button>
+      </div>
+    </form>
+    <footer class="device-id-footer" id="device-id-footer">Device ID: <span id="device-id">(loading...)</span></footer>
+  </main>
+</body>
+</html>

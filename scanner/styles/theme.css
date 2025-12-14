@@ -1,0 +1,59 @@
+/* Shared theme: background, glass, typography */
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: linear-gradient(135deg, #2a3140 0%, #3e4a5e 100%);
+  min-height: 100vh;
+}
+.background-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background: url('data:image/svg+xml;utf8,<svg width="100%25" height="100%25" xmlns="http://www.w3.org/2000/svg"><rect fill="none"/><g opacity="0.08"><text x="50%25" y="50%25" font-size="80" text-anchor="middle" fill="white" dy=".3em">WQT</text></g></svg>') center/cover no-repeat;
+  pointer-events: none;
+}
+.centered-card {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(255,255,255,0.13);
+  box-shadow: 0 8px 32px 0 rgba(31,38,135,0.18);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 18px;
+  border: 1.5px solid rgba(255,255,255,0.22);
+  padding: 2.5rem 2rem 1.5rem 2rem;
+  min-width: 320px;
+  max-width: 90vw;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
+}
+.status-pill {
+  background: #2ecc40;
+  color: #fff;
+  font-size: 0.95rem;
+  padding: 0.3em 1.1em;
+  border-radius: 999px;
+  font-weight: 600;
+  box-shadow: 0 1px 4px rgba(44,204,64,0.08);
+  letter-spacing: 0.03em;
+  margin-left: 1em;
+}
+footer.device-id-footer {
+  margin-top: 1.5rem;
+  font-size: 0.92rem;
+  color: #e0e0e0;
+  text-align: center;
+  opacity: 0.85;
+}

@@ -1,0 +1,42 @@
+/* Login-specific styles */
+#login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+#code-input {
+  font-size: 1.5rem;
+  padding: 0.7em 1em;
+  border-radius: 8px;
+  border: 1.5px solid #bfc9d1;
+  background: rgba(255,255,255,0.18);
+  color: #2a3140;
+  outline: none;
+  letter-spacing: 0.25em;
+  text-align: center;
+  width: 100%;
+  box-sizing: border-box;
+  transition: border 0.2s;
+}
+#code-input:focus {
+  border-color: #2ecc40;
+}
+.button-row {
+  display: flex;
+  gap: 1.2rem;
+  justify-content: center;
+}
+#login-btn, #create-user-btn {
+  font-size: 1.1rem;
+  padding: 0.7em 2.2em;
+  border-radius: 8px;
+  border: none;
+  background: #3e4a5e;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.18s;
+}
+#login-btn:hover, #create-user-btn:hover {
+  background: #2a3140;
+}

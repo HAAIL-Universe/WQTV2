@@ -1,0 +1,25 @@
+/* Role page shell styles */
+.role-header {
+  background: rgba(255,255,255,0.13);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-bottom: 1.5px solid rgba(255,255,255,0.18);
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #fff;
+  padding: 1.2rem 2rem;
+  text-align: left;
+  letter-spacing: 0.04em;
+}
+.role-shell {
+  min-height: 60vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.placeholder {
+  color: #bfc9d1;
+  font-size: 1.2rem;
+  opacity: 0.7;
+  padding: 2rem 0;
+}
