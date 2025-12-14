@@ -1,3 +1,28 @@
+# Tracker v0
+
+## Components & Bind Targets
+- Panel root: #trackerPanel (hidden unless Tracker tab active)
+- Order label: #trkOrderLabel
+- Log Wrap button: #btnLogWrap
+- Qty: #trkQty
+- Locations: #trkLocations
+- Pallets: #trkPallets
+- Rate: #trkRate
+- ETA: #trkETA
+- Progress bar fill: #trkProgressFill
+- Progress percent: #trkProgressPct
+- Order log list: #trkLogList
+- Scan input: #scanInput (keyboard wedge, always focused)
+- Action buttons: #btnLogDelay, #btnUndo, #btnSharedPick, #btnBreak
+
+## Required Read-Model Fields
+- assignment (object): order_label, assignment_id, customer, etc.
+- order_summary (object): qty, locations, pallets, rate, eta, progress_pct
+- order_progress (object): percent (string, e.g. "42%")
+- order_log (array): [{ message, at, level/status }]
+
+**Note:** Scanner does not compute rate, ETA, or progress. All values are rendered directly from the server read-model. Placeholders (—, 0, empty log) are shown if fields are missing.
+
 # Picker Home v0 (Assignment-first)
 
 ## Components
@@ -9,7 +34,11 @@
   - If active: show assignment details (customer/order, zone/route, id, started time), Resume button
 - Bottom actions: Log/Delay, Shared Pick, Resume/Start
 
-## Required read-model fields
+## Event Emission & Offline Queue
+- All bottom action buttons (Start/Resume, Log/Delay, Shared Pick, Tracker open) emit events via apiClient.emitEvent().
+- Events are sent immediately if online, or queued if offline (durable queue in localStorage).
+- UI must show current queue count: `Queue: N` in the status strip.
+- No business logic or metric derivation in the client; all state is server-provided.
 - metrics.live_rate_display (string)
 - metrics.total_units (number)
 - metrics.perf_score_display (string)
@@ -25,7 +54,8 @@
 - POST /assignments/next
 ## Role Page Shell v0
 
-### UI Placeholders
+- Status strip: Connectivity (Online/Offline), Queue count (Queue: N)
+  - Status strip: Connectivity (Online/Offline), Queue count (Queue: N, live from eventQueue)
 - Header title (e.g. “Picker” / “Operative”)
 - Status strip: Connectivity (Online/Offline), Queue count (Queue: N)
 - Last updated timestamp (Last updated: ...)

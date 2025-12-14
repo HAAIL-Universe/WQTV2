@@ -31,6 +31,34 @@
         <div class="metric-value" id="perf-score-display">—</div>
       </div>
     </div>
+    <!-- Tracker Panel (hidden unless Tracker tab active) -->
+    <section class="tracker-panel" id="trackerPanel" style="display:none;">
+      <div class="trk-header-row">
+        <span id="trkOrderLabel">—</span>
+        <button class="trk-btn" id="btnLogWrap">Log Wrap</button>
+      </div>
+      <div class="trk-summary-row">
+        <span>Qty: <span id="trkQty">0</span></span>
+        <span>Locations: <span id="trkLocations">—</span></span>
+        <span>Pallets: <span id="trkPallets">—</span></span>
+        <span>Rate: <span id="trkRate">—</span></span>
+        <span>ETA: <span id="trkETA">—</span></span>
+      </div>
+      <div class="trk-progress-bar">
+        <div class="trk-progress-bg" style="width:100%;background:#eee;height:18px;border-radius:9px;overflow:hidden;">
+          <div id="trkProgressFill" style="height:18px;width:0;background:#2ecc40;transition:width 0.3s;"></div>
+        </div>
+        <span id="trkProgressPct" style="margin-left:0.5em;">—</span>
+      </div>
+      <div class="trk-log-list" id="trkLogList"></div>
+      <input id="scanInput" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" style="position:absolute;left:-9999px;" tabindex="0" />
+      <div class="trk-actions-row">
+        <button class="trk-btn" id="btnLogDelay">Log / Delay</button>
+        <button class="trk-btn" id="btnUndo">Undo</button>
+        <button class="trk-btn" id="btnSharedPick">Shared Pick</button>
+        <button class="trk-btn" id="btnBreak">Break</button>
+      </div>
+    </section>
     <section class="assignment-panel" id="assignment-panel">
       <!-- Assignment state will be rendered here by JS -->
     </section>
