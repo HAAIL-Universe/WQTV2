@@ -98,13 +98,14 @@ This document defines the minimal, stable API contract for the scanner UI. It is
 {
   "status": [
     {
-      "client_event_id": "string",
-      "result": "accepted" | "duplicate" | "rejected",
-      "reason": "string (optional)"
+      "client_event_id": "string", // matches the event sent
+      "result": "accepted" | "duplicate" | "rejected", // accepted: ingested, duplicate: already seen, rejected: not accepted
+      "reason": "string (optional)" // present if rejected, e.g. validation error
     }
   ]
 }
 ```
+// For each event in the batch, the server returns a status object. The client must remove accepted/duplicate events from the queue, and keep rejected events (mark as blocked, show last_error). Never drop events silently.
 
 **Idempotency:**
 - The server must treat (company_id, client_event_id) as idempotency key.

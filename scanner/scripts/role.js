@@ -65,15 +65,30 @@ async function bootstrap() {
 
   // Connectivity
   let online = navigator.onLine;
-  function updateStatusStrip() {
-    statusStrip.innerHTML = `<span class="status-pill ${online ? 'online' : 'offline'}">${online ? 'Online' : 'Offline'}</span> <span id="queue-count">Queue: 0</span>`;
+  function updateStatusStrip(syncing = false) {
+    const total = eventQueue.getCount();
+    const blocked = eventQueue.getBlockedCount();
+    let delivery = '';
+    if (syncing) {
+      delivery = 'SYNCING';
+    } else if (blocked > 0) {
+      delivery = 'ERROR';
+    } else if (online && total === 0) {
+      delivery = 'LIVE';
+    } else {
+      delivery = 'QUEUED';
+    }
+    statusStrip.innerHTML = `
+      <span class="status-pill ${online ? 'online' : 'offline'}">${online ? 'Online' : 'Offline'}</span>
+      <span id="queue-count">Queue: ${total}${blocked > 0 ? ` &nbsp;Blocked: ${blocked}` : ''}</span>
+      <span id="delivery-state" style="margin-left:1em;">${delivery}</span>
+    `;
   }
   subscribeConnectivity(val => { online = val; updateStatusStrip(); });
   updateStatusStrip();
 
-    function updateQueueCount() {
-      const queueEl = statusStrip.querySelector('#queue-count');
-      if (queueEl) queueEl.textContent = `Queue: ${eventQueue.getCount()}`;
+    function updateQueueCount(syncing = false) {
+      updateStatusStrip(syncing);
     }
 
     // Listen for queue changes (localStorage event for multi-tab)
@@ -126,6 +141,12 @@ async function bootstrap() {
           });
           // Emit event for assignment claimed/received
           await emitEvent('assignment_received', { assignment_id: assignment.assignment_id }, session);
+          updateQueueCount();
+          if (online) {
+            updateQueueCount(true);
+            await syncEventQueue(session);
+            updateQueueCount();
+          }
           // Patch state and re-render (render-only)
           state.assignment = { active: true, ...assignment };
           renderPickerState(state);
@@ -152,6 +173,12 @@ async function bootstrap() {
       btn.textContent = 'Resume';
       btn.onclick = async () => {
         await emitEvent('assignment_resumed', { assignment_id: state.assignment.assignment_id }, session);
+        updateQueueCount();
+        if (online) {
+          updateQueueCount(true);
+          await syncEventQueue(session);
+          updateQueueCount();
+        }
       };
       panel.appendChild(btn);
     }
@@ -161,15 +188,33 @@ async function bootstrap() {
       const el = e.target;
       if (el.id === 'log-delay-btn') {
         await emitEvent('log_delay', { assignment_id: (window.currentAssignmentId || null) }, getSession());
+        updateQueueCount();
+        if (online) {
+          updateQueueCount(true);
+          await syncEventQueue(getSession());
+          updateQueueCount();
+        }
       }
       if (el.id === 'shared-pick-btn') {
         await emitEvent('shared_pick', { assignment_id: (window.currentAssignmentId || null) }, getSession());
+        updateQueueCount();
+        if (online) {
+          updateQueueCount(true);
+          await syncEventQueue(getSession());
+          updateQueueCount();
+        }
       }
       if (el.classList.contains('pill-tab') && el.dataset.tab === 'tracker') {
         // Only emit if assignment is active
         const state = await getScannerState(getSession().token);
         if (state.assignment && state.assignment.active) {
           await emitEvent('tracker_opened', { assignment_id: state.assignment.assignment_id }, getSession());
+          updateQueueCount();
+          if (online) {
+            updateQueueCount(true);
+            await syncEventQueue(getSession());
+            updateQueueCount();
+          }
         }
       }
     });
