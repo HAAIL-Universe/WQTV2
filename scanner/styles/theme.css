@@ -1,5 +1,4 @@
 /* Shared theme: background, glass, typography */
-html, body {
   height: 100%;
   margin: 0;
   padding: 0;
@@ -54,6 +53,110 @@ footer.device-id-footer {
   margin-top: 1.5rem;
   font-size: 0.92rem;
   color: #e0e0e0;
+  text-align: center;
+  opacity: 0.85;
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  min-height: 100vh;
+  background: var(--wqt-bg-gradient);
+}
+
+:root {
+  --wqt-bg-gradient: linear-gradient(135deg, #7b2ff2 0%, #40e0d0 100%);
+  --wqt-glass-bg: rgba(255,255,255,0.13);
+  --wqt-glass-border: 1.5px solid rgba(255,255,255,0.22);
+  --wqt-glass-radius: 18px;
+  --wqt-glass-blur: 12px;
+  --wqt-card-shadow: 0 8px 32px 0 rgba(31,38,135,0.18);
+  --wqt-input-bg: rgba(255,255,255,0.18);
+  --wqt-input-border: 1.5px solid #bfc9d1;
+  --wqt-input-focus: #2ecc40;
+  --wqt-btn-primary-bg: #232b3b;
+  --wqt-btn-primary-glow: 0 0 0 2px #2ecc40, 0 1px 8px #2ecc4033;
+  --wqt-btn-secondary-bg: #2d3a5e;
+  --wqt-btn-secondary-hover: #1e2233;
+  --wqt-btn-radius: 8px;
+  --wqt-btn-font: 600;
+  --wqt-pill-online-bg: #2ecc40;
+  --wqt-pill-online-color: #fff;
+  --wqt-pill-offline-bg: #e67e22;
+  --wqt-pill-offline-color: #fff;
+  --wqt-pill-radius: 999px;
+  --wqt-pill-shadow: 0 1px 4px rgba(44,204,64,0.08);
+  --wqt-footer-color: #e0e0e0;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: url('data:image/svg+xml;utf8,<svg width="100%25" height="100%25" xmlns="http://www.w3.org/2000/svg"><rect fill="none"/><g opacity="0.045"><text x="50%25" y="50%25" font-size="120" text-anchor="middle" fill="white" dy=".3em">WQT</text></g></svg>') center/cover no-repeat;
+}
+
+.background-overlay {
+  display: none;
+}
+
+.centered-card {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--wqt-glass-bg);
+  box-shadow: var(--wqt-card-shadow);
+  backdrop-filter: blur(var(--wqt-glass-blur));
+  -webkit-backdrop-filter: blur(var(--wqt-glass-blur));
+  border-radius: var(--wqt-glass-radius);
+  border: var(--wqt-glass-border);
+  padding: 2.5rem 2rem 1.5rem 2rem;
+  min-width: 320px;
+  max-width: 90vw;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
+}
+
+.status-pill {
+  font-size: 0.95rem;
+  padding: 0.3em 1.1em;
+  border-radius: var(--wqt-pill-radius);
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  margin-left: 1em;
+  box-shadow: var(--wqt-pill-shadow);
+  border: 1.5px solid rgba(255,255,255,0.18);
+  transition: background 0.18s, color 0.18s, border 0.18s;
+}
+.status-pill.online {
+  background: var(--wqt-pill-online-bg);
+  color: var(--wqt-pill-online-color);
+  border-color: #2ecc40cc;
+}
+.status-pill.offline {
+  background: var(--wqt-pill-offline-bg);
+  color: var(--wqt-pill-offline-color);
+  border-color: #e67e22cc;
+}
+
+footer.device-id-footer {
+  margin-top: 1.5rem;
+  font-size: 0.92rem;
+  color: var(--wqt-footer-color);
   text-align: center;
   opacity: 0.85;
 }

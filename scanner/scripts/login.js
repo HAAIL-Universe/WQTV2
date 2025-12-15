@@ -1,7 +1,10 @@
 // login.js - login page logic
+
 import { loginWithCode } from './apiClient.js';
 import { setSession } from './auth.js';
 import { routeAfterLogin } from './router.js';
+import { getDeviceShortId } from './deviceId.js';
+import { subscribeConnectivity } from './connectivity.js';
 
 document.addEventListener('DOMContentLoaded', () => {
   const form = document.getElementById('login-form');
@@ -9,23 +12,17 @@ document.addEventListener('DOMContentLoaded', () => {
   const statusPill = document.getElementById('status-pill');
   const deviceIdSpan = document.getElementById('device-id');
 
-  // Online status
-  function updateStatus() {
-    statusPill.textContent = navigator.onLine ? 'Online' : 'Offline';
-    statusPill.style.background = navigator.onLine ? '#2ecc40' : '#e67e22';
-  }
-  window.addEventListener('online', updateStatus);
-  window.addEventListener('offline', updateStatus);
-  updateStatus();
 
-  // Device ID (mock: use userAgent hash)
-  function getDeviceId() {
-    let ua = navigator.userAgent;
-    let hash = 0;
-    for (let i = 0; i < ua.length; i++) hash = ((hash << 5) - hash) + ua.charCodeAt(i);
-    return 'DEV-' + Math.abs(hash).toString().slice(0, 8);
+  // Connectivity status pill
+  function updateStatusPill(online) {
+    statusPill.textContent = online ? 'Online' : 'Offline';
+    statusPill.classList.toggle('online', online);
+    statusPill.classList.toggle('offline', !online);
   }
-  deviceIdSpan.textContent = getDeviceId();
+  subscribeConnectivity(updateStatusPill);
+
+  // Device ID (short form)
+  deviceIdSpan.textContent = getDeviceShortId();
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -38,9 +35,14 @@ document.addEventListener('DOMContentLoaded', () => {
     codeInput.setCustomValidity('');
     form.querySelectorAll('button').forEach(btn => btn.disabled = true);
     const result = await loginWithCode(code);
-    if (result.success) {
-      setSession(result.token, result.role);
-      routeAfterLogin(result.role);
+    if (result.success && result.session) {
+      setSession(result.session);
+      if (['picker', 'operative'].includes(result.session.role)) {
+        routeAfterLogin(result.session.role);
+      } else {
+        setSession(null);
+        alert('Unknown role: ' + (result.session.role || 'none'));
+      }
     } else {
       alert(result.error || 'Login failed');
     }

@@ -1,29 +1,36 @@
 // auth.js - session/token management
-let token = null;
-let role = null;
 
-export function setSession(newToken, newRole) {
-  token = newToken;
-  role = newRole;
-  sessionStorage.setItem('wqt_token', token);
-  sessionStorage.setItem('wqt_role', role);
+const SESSION_KEY = 'wqt_session';
+let session = null;
+
+export function setSession(newSession) {
+  session = newSession;
+  localStorage.setItem(SESSION_KEY, JSON.stringify(session));
 }
 
-export function getToken() {
-  return token || sessionStorage.getItem('wqt_token');
-}
-
-export function getRole() {
-  return role || sessionStorage.getItem('wqt_role');
-}
-
-export function isAuthenticated() {
-  return !!getToken();
+export function getSession() {
+  if (session) return session;
+  const raw = localStorage.getItem(SESSION_KEY);
+  if (!raw) return null;
+  try {
+    session = JSON.parse(raw);
+    return session;
+  } catch {
+    return null;
+  }
 }
 
 export function clearSession() {
-  token = null;
-  role = null;
-  sessionStorage.removeItem('wqt_token');
-  sessionStorage.removeItem('wqt_role');
+  session = null;
+  localStorage.removeItem(SESSION_KEY);
+}
+
+export function isAuthenticated() {
+  const s = getSession();
+  return !!(s && s.token);
+}
+
+export function getRole() {
+  const s = getSession();
+  return s && s.role;
 }

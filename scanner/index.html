@@ -9,20 +9,20 @@
   <script type="module" src="scripts/login.js"></script>
 </head>
 <body>
-  <div class="background-overlay"></div>
   <main class="centered-card">
     <div class="card-header">
       <h1>Sign in to WQT</h1>
-      <span class="status-pill" id="status-pill">Online</span>
+      <span class="status-pill online" id="status-pill">Online</span>
     </div>
     <form id="login-form" autocomplete="off">
-      <input type="text" id="code-input" maxlength="5" pattern="\d{5}" placeholder="5-digit code" required autofocus>
+      <label for="code-input" style="font-size:1.05rem;opacity:0.82;margin-bottom:0.3em;display:block;text-align:center;">5-digit code</label>
+      <input type="text" id="code-input" maxlength="5" pattern="\d{5}" placeholder="e.g. 12345" required autofocus>
       <div class="button-row">
         <button type="submit" id="login-btn">Log in</button>
         <button type="button" id="create-user-btn">Create user</button>
       </div>
     </form>
-    <footer class="device-id-footer" id="device-id-footer">Device ID: <span id="device-id">(loading...)</span></footer>
+    <footer class="device-id-footer" id="device-id-footer">Device <span id="device-id">(loading...)</span></footer>
   </main>
 </body>
 </html>

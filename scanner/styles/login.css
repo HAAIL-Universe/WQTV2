@@ -1,5 +1,4 @@
 /* Login-specific styles */
-#login-form {
   display: flex;
   flex-direction: column;
   gap: 1.2rem;
@@ -39,4 +38,66 @@
 }
 #login-btn:hover, #create-user-btn:hover {
   background: #2a3140;
+}
+
+#login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+#code-input {
+  font-size: 1.5rem;
+  padding: 0.7em 1em;
+  border-radius: var(--wqt-btn-radius);
+  border: var(--wqt-input-border);
+  background: var(--wqt-input-bg);
+  color: #232b3b;
+  outline: none;
+  letter-spacing: 0.25em;
+  text-align: center;
+  width: 100%;
+  box-sizing: border-box;
+  transition: border 0.2s;
+}
+#code-input:focus {
+  border-color: var(--wqt-input-focus);
+}
+
+.button-row {
+  display: flex;
+  gap: 1.2rem;
+  justify-content: center;
+}
+
+#login-btn {
+  font-size: 1.1rem;
+  padding: 0.7em 2.2em;
+  border-radius: var(--wqt-btn-radius);
+  border: none;
+  background: var(--wqt-btn-primary-bg);
+  color: #fff;
+  font-weight: var(--wqt-btn-font);
+  cursor: pointer;
+  box-shadow: var(--wqt-btn-primary-glow);
+  transition: background 0.18s, box-shadow 0.18s;
+}
+#login-btn:hover {
+  background: #1e2233;
+  box-shadow: 0 0 0 3px #2ecc40cc;
+}
+
+#create-user-btn {
+  font-size: 1.1rem;
+  padding: 0.7em 2.2em;
+  border-radius: var(--wqt-btn-radius);
+  border: none;
+  background: var(--wqt-btn-secondary-bg);
+  color: #fff;
+  font-weight: var(--wqt-btn-font);
+  cursor: pointer;
+  transition: background 0.18s;
+}
+#create-user-btn:hover {
+  background: var(--wqt-btn-secondary-hover);
 }

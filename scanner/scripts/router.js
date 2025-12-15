@@ -7,6 +7,6 @@ export function routeAfterLogin(role) {
   } else if (role === 'operative') {
     window.location.href = 'operative.html';
   } else {
-    alert('Unknown role: ' + role);
+    window.location.href = 'index.html';
   }
 }
